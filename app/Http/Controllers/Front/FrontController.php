@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Admin;
+namespace App\Http\Controllers\Front;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -14,7 +14,7 @@ use Mail;
 use Response;
 
 
-class adminController extends Controller
+class FrontController extends Controller
 {
     public function __construct()
     {
@@ -23,6 +23,6 @@ class adminController extends Controller
     public function index()
     {
         $data = array();
-        return View('admin.dashboard',$data);
+        return View('front.home',$data);
     }
 }
