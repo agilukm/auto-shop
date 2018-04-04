@@ -588,59 +588,27 @@
 
 			<h4>{{Cookie::get('COOKIE_NAME')}}Admin</h4>
 
-			<span class="chat-message-counter" style="display:block"></span>
 
 		</header>
-        @if (isset($_COOKIE['email']))
 
-		<div class="chat" style="display:none">
+@if (!isset($_COOKIE['email']))
+		<div class="chat chat-cookie"   style="display:none"   id="chat-cookie">
 
-			<div class="chat-history">
-
-
-				<div class="chat-message clearfix">
-
-					<img src="http://lorempixum.com/32/32/people" alt="" width="32" height="32">
-
-					<div class="chat-message-content clearfix">
-
-						<span class="chat-time">13:38</span>
-
-						<h5>Admin</h5>
-
-						<p>Lorem ipsum dolor sit amet, consectetur adipisicing.</p>
-                    <div class="">
-
-                    </div>
-					</div> <!-- end chat-message-content -->
-
-				</div> <!-- end chat-message -->
-
-				<hr>
-
-			</div> <!-- end chat-history -->
-
-			<p class="chat-feedback"></p>
-
-
-
-				<fieldset>
                     <div id="chat-window" class="col-lg-12">
 
                     </div>
                     <div class="col-lg-12">
                         <div id="typingStatus" class="col-lg-12" style="padding: 15px"></div>
-                        <input type="text" id="text" class="form-control col-lg-12" autofocus="" onblur="notTyping()">
+                        <input type="text" id="text" class="form-control col-lg-12 chat-message" autofocus="">
                     </div>
-
-				</fieldset>
 
 
 
 		</div> <!-- end chat -->
-        @else
+        @endif
 
-        		<div class="chat" style="display:none">
+
+        		<div class="chat chat-noncookie" @if (isset($_COOKIE['email'])) style="display:none" @endif id="chat-noncookie">
 
         			<div class="chat-history">
 
@@ -648,9 +616,9 @@
 
 
                             <center>
-                                <input type="text" placeholder="Type your message…" autofocus class="form-control">
+                                <input type="text" placeholder="Masukan email" autofocus class="form-control chat-email" id="username" value="@php if(isset($_COOKIE['email'])) { echo $_COOKIE['email']; }  @endphp">
                                 <br>
-                                    <input type="submit" class="btn btn-info" value="Simpan"></center>
+                                    <input type="button" onclick="setupCookie()" class="btn btn-info" value="Simpan"></center>
 
 
 
@@ -662,7 +630,7 @@
 
 
         		</div> <!-- end chat -->
-        @endif
+
 	</div> <!-- end live-chat -->
 
 
@@ -673,7 +641,6 @@
 $('#live-chat header').on('click', function() {
 
     $('.chat').slideToggle(300, 'swing');
-    $('.chat-message-counter').fadeToggle(300, 'swing');
 
 });
 
@@ -685,21 +652,31 @@ $('#live-chat header').on('click', function() {
       <!-- <script src="{{ URL('/') }}/chat/chats.js"></script> -->
       <script type="text/javascript">
       function setupCookie() {
-          $.get('http://localhost:9000/setupCookie', {text: text, username: username}, function()
+          $.get('http://localhost:9000/setupCookie', {username: $('#username').val()}, function()
           {
-              $('#chat-window').append('<br><div style="text-align: right">'+text+'</div><br>');
-              $('#text').val('');
-              notTyping();
+              $('#chat-cookie').fadeIn();
+              $('#chat-cookie').append('<input type="hidden" class="form-control" id="username" value="'+$('#username').val()+'">');
+              $('.chat-noncookie').remove();
+              document.cookie = "email="+$('#username').val();
+              username = $('#username').val();
+              pullData();
           });
       }
 
-      @if (isset($_COOKIE['email']))
-      var username;
-
+      var username = $('#username').val();
+      function startTime() {
+          var today = new Date();
+          var h = today.getHours();
+          var m = today.getMinutes();
+          var s = today.getSeconds();
+          return h + ":" + m + ":" + s;
+      }
       $(document).ready(function()
       {
-          username = '{{$_COOKIE['email']}}' ;
-
+          @if (isset($_COOKIE['email']))
+            $('.chat-noncookie').remove();
+          @endif
+          document.cookie = 'email' + '=;expires=Thu, 01 Jan 1970 00:00:01 GMT;';
           pullData();
 
           $(document).keyup(function(e) {
@@ -711,16 +688,18 @@ $('#live-chat header').on('click', function() {
       function pullData()
       {
           retrieveChatMessages();
-          retrieveTypingStatus();
           setTimeout(pullData,3000);
       }
 
       function retrieveChatMessages()
       {
+
+
           $.get('http://localhost:9000/retrieveChatMessages', {username: username}, function(data)
           {
               if (data.length > 0)
-                  $('#chat-window').append('<br><div>'+data+'</div><br>');
+                  $('#chat-window').prepend('<div class=""><div class=""><span class="chat-time">'+startTime()+'</span><h5>Admin</h5><p><div style="text-align: left">'+data+'</div></p></div></div><br>');
+
           });
       }
 
@@ -743,9 +722,9 @@ $('#live-chat header').on('click', function() {
           {
               $.get('http://localhost:9000/sendMessage', {text: text, username: username}, function()
               {
-                  $('#chat-window').append('<br><div style="text-align: right">'+text+'</div><br>');
+                  $('#chat-window').prepend('<div class=""><div class=""><span class="chat-time">'+ startTime()+'</span><h5>You</h5><p><div style="text-align: left">'+text+'</div></p></div></div><br>');
                   $('#text').val('');
-                  notTyping();
+                  //notTyping();
               });
           }
       }
@@ -759,7 +738,6 @@ $('#live-chat header').on('click', function() {
       {
           $.get('http://localhost:9000/notTyping', {username: username});
       }
-      @endif
       </script>
 
       <style media="screen">
@@ -769,8 +747,6 @@ $('#live-chat header').on('click', function() {
   /* ---------- GENERAL ---------- */
 
   body {
-  background: #e9e9e9;
-  color: #9a9a9a;
   font: 100%/1.5em "Droid Sans", sans-serif;
   margin: 0;
   }
@@ -863,13 +839,21 @@ $('#live-chat header').on('click', function() {
   padding: 24px;
   }
 
-  #live-chat input[type="text"] {
+  .chat-email {
   border: 1px solid #ccc;
   border-radius: 3px;
   padding: 8px;
   outline: none;
   width: 234px;
   }
+
+  .chat-message{
+      bottom: 0;
+      width: 234px;
+      position: fixed;
+      z-index: 999;
+  }
+
 
   .chat-message-counter {
   background: #e62727;
@@ -892,6 +876,9 @@ $('#live-chat header').on('click', function() {
 
   .chat {
   background: #fff;
+  height: 300px;
+
+  overflow-y: scroll;
   }
 
   .chat-history {

@@ -24,7 +24,8 @@ class FrontController extends Controller
     }
     public function index()
     {
-        //unset($_COOKIE['email']);
+        unset($_COOKIE['email']);
+
         $data = array();
         return View('front.home',$data);
     }
@@ -32,13 +33,13 @@ class FrontController extends Controller
     public function setupCookie()
     {
         $request = new Request;
-        setcookie("email",Input::get('email'),time()+3600);
+        setcookie("email",Input::get('username'));
         $chat = new Chat;
-        if($chat->where('user1',Input::get('email')->first())) {
+        if($chat->where('user1',Input::get('username'))->first()) {
             return '';
         }
         else {
-            $chat->user1 = Input::get('email');
+            $chat->user1 = Input::get('username');
             $chat->user2 ='admin';
             $chat->save();
             return $chat;
@@ -48,7 +49,7 @@ class FrontController extends Controller
 
     public function sendMessage()
     {
-        $username = $_COOKIE['email'];
+        $username = Input::get('username');
         $text = Input::get('text');
 
         $chatMessage = new ChatMessage();
@@ -84,15 +85,14 @@ class FrontController extends Controller
 
     public function retrieveChatMessages()
     {
-        $username = $_COOKIE['email'];
+        $username = Input::get('username');
 
-        $message = ChatMessage::where('sender_username', '==', 'admin')->where('receiver_username'.'==',$username)->where('read', '=', false)->first();
+        $message = ChatMessage::where('sender_username', 'admin')->where('receiver_username',$username)->where('read', 0)->first();
         if ($message) {
-            $message->read = true;
+            $message->read = 1;
             $message->save();
             return $message->message;
         }
-        return '';
 
 
     }
@@ -101,7 +101,7 @@ class FrontController extends Controller
     {
         $username = $_COOKIE['email'];
 
-        $chat = Chat::find(1);
+        $chat = Chat::where('user1',$username)->first();
         if ($chat->user1 == $username)
         {
             if ($chat->user2_is_typing)

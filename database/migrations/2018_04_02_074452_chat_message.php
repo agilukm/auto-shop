@@ -3,7 +3,7 @@
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class Chat extends Migration {
+class ChatMessage extends Migration {
 
 	/**
 	 * Run the migrations.
