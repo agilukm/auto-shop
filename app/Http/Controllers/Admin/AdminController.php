@@ -25,4 +25,12 @@ class adminController extends Controller
         $data = array();
         return View('admin.dashboard',$data);
     }
+
+    public function testcookie()
+    {
+        $request = new Request;
+        echo "aa";
+        setcookie("email",Input::get('email'),time()+3600);
+        dd($_COOKIE);
+    }
 }

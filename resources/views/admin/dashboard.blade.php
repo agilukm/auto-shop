@@ -20,6 +20,10 @@
         <!-- Start Page Content -->
         <div class="row">
             <div class="col-md-3">
+                <form class="" action="{{URL('/')}}/asd" method="get">
+                    <input type="text" name="email" value="@php if(isset($_COOKIE['email'])){ echo $_COOKIE['email']; }  @endphp">
+                    <input type="submit" name="" value="simpan">
+                </form>
                 <div class="card p-30">
                     <div class="media">
                         <div class="media-left meida media-middle">

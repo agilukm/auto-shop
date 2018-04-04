@@ -591,6 +591,7 @@
 			<span class="chat-message-counter" style="display:block"></span>
 
 		</header>
+        @if (isset($_COOKIE['email']))
 
 		<div class="chat" style="display:none">
 
@@ -608,7 +609,9 @@
 						<h5>Admin</h5>
 
 						<p>Lorem ipsum dolor sit amet, consectetur adipisicing.</p>
+                    <div class="">
 
+                    </div>
 					</div> <!-- end chat-message-content -->
 
 				</div> <!-- end chat-message -->
@@ -619,182 +622,50 @@
 
 			<p class="chat-feedback"></p>
 
-			<form action="#" method="post">
+
 
 				<fieldset>
+                    <div id="chat-window" class="col-lg-12">
 
-					<input type="text" placeholder="Type your message…" autofocus>
-					<input type="hidden">
+                    </div>
+                    <div class="col-lg-12">
+                        <div id="typingStatus" class="col-lg-12" style="padding: 15px"></div>
+                        <input type="text" id="text" class="form-control col-lg-12" autofocus="" onblur="notTyping()">
+                    </div>
 
 				</fieldset>
 
-			</form>
+
 
 		</div> <!-- end chat -->
+        @else
 
+        		<div class="chat" style="display:none">
+
+        			<div class="chat-history">
+
+                        <p>Selamat datang, silahkan masukan email untuk memulai chat dengan admin</p>
+
+
+                            <center>
+                                <input type="text" placeholder="Type your message…" autofocus class="form-control">
+                                <br>
+                                    <input type="submit" class="btn btn-info" value="Simpan"></center>
+
+
+
+
+        			</div> <!-- end chat-history -->
+
+        			<p class="chat-feedback"></p>
+
+
+
+        		</div> <!-- end chat -->
+        @endif
 	</div> <!-- end live-chat -->
 
-    <style media="screen">
-    @charset "utf-8";
-/* CSS Document */
 
-/* ---------- GENERAL ---------- */
-
-body {
-background: #e9e9e9;
-color: #9a9a9a;
-font: 100%/1.5em "Droid Sans", sans-serif;
-margin: 0;
-}
-
-a { text-decoration: none; }
-
-fieldset {
-border: 0;
-margin: 0;
-padding: 0;
-}
-
-h4, h5 {
-line-height: 1.5em;
-margin: 0;
-}
-
-hr {
-background: #e9e9e9;
-border: 0;
--moz-box-sizing: content-box;
-box-sizing: content-box;
-height: 1px;
-margin: 0;
-min-height: 1px;
-}
-
-img {
-border: 0;
-display: block;
-height: auto;
-max-width: 100%;
-}
-
-input {
-border: 0;
-color: inherit;
-font-family: inherit;
-font-size: 100%;
-line-height: normal;
-margin: 0;
-}
-
-p { margin: 0; }
-
-.clearfix { *zoom: 1; } /* For IE 6/7 */
-.clearfix:before, .clearfix:after {
-content: "";
-display: table;
-}
-.clearfix:after { clear: both; }
-
-/* ---------- LIVE-CHAT ---------- */
-
-#live-chat {
-bottom: 0;
-font-size: 12px;
-right: 24px;
-position: fixed;
-width: 300px;
-}
-
-#live-chat header {
-background: #293239;
-border-radius: 5px 5px 0 0;
-color: #fff;
-cursor: pointer;
-padding: 16px 24px;
-}
-
-#live-chat h4:before {
-background: #1a8a34;
-border-radius: 50%;
-content: "";
-display: inline-block;
-height: 8px;
-margin: 0 8px 0 0;
-width: 8px;
-}
-
-#live-chat h4 {
-font-size: 12px;
-}
-
-#live-chat h5 {
-font-size: 10px;
-}
-
-#live-chat form {
-padding: 24px;
-}
-
-#live-chat input[type="text"] {
-border: 1px solid #ccc;
-border-radius: 3px;
-padding: 8px;
-outline: none;
-width: 234px;
-}
-
-.chat-message-counter {
-background: #e62727;
-border: 1px solid #fff;
-border-radius: 50%;
-display: none;
-font-size: 12px;
-font-weight: bold;
-height: 28px;
-left: 0;
-line-height: 28px;
-margin: -15px 0 0 -15px;
-position: absolute;
-text-align: center;
-top: 0;
-width: 28px;
-}
-
-
-
-.chat {
-background: #fff;
-}
-
-.chat-history {
-height: 252px;
-padding: 8px 24px;
-overflow-y: scroll;
-}
-
-.chat-message {
-margin: 16px 0;
-}
-
-.chat-message img {
-border-radius: 50%;
-float: left;
-}
-
-.chat-message-content {
-margin-left: 56px;
-}
-
-.chat-time {
-float: right;
-font-size: 10px;
-}
-
-.chat-feedback {
-font-style: italic;
-margin: 0 0 0 80px;
-}
-    </style>
 
     <script type="text/javascript">
     (function() {
@@ -809,6 +680,248 @@ $('#live-chat header').on('click', function() {
 
 }) ();
     </script>
+
       @yield('plugin')
+      <!-- <script src="{{ URL('/') }}/chat/chats.js"></script> -->
+      <script type="text/javascript">
+      function setupCookie() {
+          $.get('http://localhost:9000/setupCookie', {text: text, username: username}, function()
+          {
+              $('#chat-window').append('<br><div style="text-align: right">'+text+'</div><br>');
+              $('#text').val('');
+              notTyping();
+          });
+      }
+
+      @if (isset($_COOKIE['email']))
+      var username;
+
+      $(document).ready(function()
+      {
+          username = '{{$_COOKIE['email']}}' ;
+
+          pullData();
+
+          $(document).keyup(function(e) {
+              if (e.keyCode == 13)
+                  sendMessage();
+          });
+      });
+
+      function pullData()
+      {
+          retrieveChatMessages();
+          retrieveTypingStatus();
+          setTimeout(pullData,3000);
+      }
+
+      function retrieveChatMessages()
+      {
+          $.get('http://localhost:9000/retrieveChatMessages', {username: username}, function(data)
+          {
+              if (data.length > 0)
+                  $('#chat-window').append('<br><div>'+data+'</div><br>');
+          });
+      }
+
+      function retrieveTypingStatus()
+      {
+          $.get('http://localhost:9000/retrieveTypingStatus', {username: username}, function(username)
+          {
+              if (username.length > 0)
+                  $('#typingStatus').html(username+' is typing');
+              else
+                  $('#typingStatus').html('');
+          });
+      }
+
+      function sendMessage()
+      {
+          var text = $('#text').val();
+
+          if (text.length > 0)
+          {
+              $.get('http://localhost:9000/sendMessage', {text: text, username: username}, function()
+              {
+                  $('#chat-window').append('<br><div style="text-align: right">'+text+'</div><br>');
+                  $('#text').val('');
+                  notTyping();
+              });
+          }
+      }
+
+      function isTyping()
+      {
+          $.get('http://localhost:9000/isTyping', {username: username});
+      }
+
+      function notTyping()
+      {
+          $.get('http://localhost:9000/notTyping', {username: username});
+      }
+      @endif
+      </script>
+
+      <style media="screen">
+      @charset "utf-8";
+  /* CSS Document */
+
+  /* ---------- GENERAL ---------- */
+
+  body {
+  background: #e9e9e9;
+  color: #9a9a9a;
+  font: 100%/1.5em "Droid Sans", sans-serif;
+  margin: 0;
+  }
+
+  a { text-decoration: none; }
+
+  fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  }
+
+  h4, h5 {
+  line-height: 1.5em;
+  margin: 0;
+  }
+
+  hr {
+  background: #e9e9e9;
+  border: 0;
+  -moz-box-sizing: content-box;
+  box-sizing: content-box;
+  height: 1px;
+  margin: 0;
+  min-height: 1px;
+  }
+
+  img {
+  border: 0;
+  display: block;
+  height: auto;
+  max-width: 100%;
+  }
+
+  input {
+  border: 0;
+  color: inherit;
+  font-family: inherit;
+  font-size: 100%;
+  line-height: normal;
+  margin: 0;
+  }
+
+  p { margin: 0; }
+
+  .clearfix { *zoom: 1; } /* For IE 6/7 */
+  .clearfix:before, .clearfix:after {
+  content: "";
+  display: table;
+  }
+  .clearfix:after { clear: both; }
+
+  /* ---------- LIVE-CHAT ---------- */
+
+  #live-chat {
+  bottom: 0;
+  font-size: 12px;
+  right: 24px;
+  position: fixed;
+  width: 300px;
+  }
+
+  #live-chat header {
+  background: #293239;
+  border-radius: 5px 5px 0 0;
+  color: #fff;
+  cursor: pointer;
+  padding: 16px 24px;
+  }
+
+  #live-chat h4:before {
+  background: #1a8a34;
+  border-radius: 50%;
+  content: "";
+  display: inline-block;
+  height: 8px;
+  margin: 0 8px 0 0;
+  width: 8px;
+  }
+
+  #live-chat h4 {
+  font-size: 12px;
+  }
+
+  #live-chat h5 {
+  font-size: 10px;
+  }
+
+  #live-chat form {
+  padding: 24px;
+  }
+
+  #live-chat input[type="text"] {
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  padding: 8px;
+  outline: none;
+  width: 234px;
+  }
+
+  .chat-message-counter {
+  background: #e62727;
+  border: 1px solid #fff;
+  border-radius: 50%;
+  display: none;
+  font-size: 12px;
+  font-weight: bold;
+  height: 28px;
+  left: 0;
+  line-height: 28px;
+  margin: -15px 0 0 -15px;
+  position: absolute;
+  text-align: center;
+  top: 0;
+  width: 28px;
+  }
+
+
+
+  .chat {
+  background: #fff;
+  }
+
+  .chat-history {
+  height: 252px;
+  padding: 8px 24px;
+  overflow-y: scroll;
+  }
+
+  .chat-message {
+  margin: 16px 0;
+  }
+
+  .chat-message img {
+  border-radius: 50%;
+  float: left;
+  }
+
+  .chat-message-content {
+  margin-left: 56px;
+  }
+
+  .chat-time {
+  float: right;
+  font-size: 10px;
+  }
+
+  .chat-feedback {
+  font-style: italic;
+  margin: 0 0 0 80px;
+  }
+      </style>
    </body>
 </html>
